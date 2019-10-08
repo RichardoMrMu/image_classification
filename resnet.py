@@ -111,7 +111,7 @@ def main():
     out = model(tmp)
     print('resnet:',out.shape)
 
-    # 参数量
+
     p = sum(map(lambda p: p.numel(),model.parameters()))
     print('parameters size:',p)
 

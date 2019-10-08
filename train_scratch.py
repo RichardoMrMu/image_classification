@@ -8,9 +8,11 @@ from torch import optim,nn
 import visdom
 from torch.utils.data import DataLoader
 from hustdata import HustData
+from HustData_LOAD import HustData_LOAD
 from resnet import ResNet18
 import os
 import argparse
+from torchvision import transforms
 #
 parser = argparse.ArgumentParser(description="Image Classification -ResNet18")
 parser.add_argument('--epochs',type=int,default=10,
@@ -68,6 +70,17 @@ def evaluate(model,loader):
         correct += torch.eq(pred,y).sum().float().item()
 
     return  correct/total
+def test_img(model):
+    test_img_db = HustData_LOAD(root=folder,resize=224)
+    test_img_dataloder = DataLoader(test_img_db,batch_size=args.batchsz,shuffle=False,
+                                    num_workers=2)
+    for x in test_img_dataloder:
+        x = x.to(device)
+        with torch.no_grad:
+            logits = model(x)
+            pred = logits.argmax(dim=1)
+            print(pred)
+
 
 
 
@@ -129,4 +142,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    model = ResNet18(args.num_class).to(device)
+    model.load_state_dict(torch.load('best.mdl'))
+    print('loaded from ckpt!')
+    test_img(model=model)

@@ -9,7 +9,8 @@ import random,csv
 from torch.utils.data import Dataset,DataLoader
 from torchvision import transforms
 from PIL import Image
-
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class HustData(Dataset):
     def __init__(self,root,resize,mode):
@@ -17,7 +18,7 @@ class HustData(Dataset):
 
         self.root = root
         self.resize = resize
-        self.name2label = {} # 南一楼 0 ...
+        self.name2label = {} 
         for name in sorted(os.listdir(root)):
             if not os.path.isdir(os.path.join(root,name)):
                 continue
@@ -87,24 +88,24 @@ class HustData(Dataset):
 
 
     def __getitem__(self, idex):
-        # ide [0-len]
+        # idex [0-len]
         # self.images self.labels
         # img :E:\\debug\\pyCharmdeBug\\image_classification\\HustData\\Dinning_Hall\\IMG_20190920_113424.jpg'
         # label : 0
         img, label = self.images[idex],self.labels[idex]
         tf = transforms.Compose([
             lambda x:Image.open(x).convert('RGB'),
-            # 压缩大小
+           
             transforms.Resize((int(self.resize*1.25),int(self.resize*1.25))),
-            # 将图片旋转15度，增加图片多样性，生成多种图片，但是角度不应该太大，因为太大会造成不收敛
+            
             transforms.RandomRotation(15),
-            # 中心裁剪，防止旋转以后出现的黑背景影响学习
+           
             transforms.CenterCrop(self.resize),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])  # normalize 希望图片范围在0左右分布，而不是只在零的右侧，这里的数据用到了ImageNet的数据
+                                 std=[0.229, 0.224, 0.225]) 
         ])
-        #                             r     g      b   normalize   -1 - 1 分布
+        #                            
         img = tf(img)
         label = torch.tensor(label)
         return img, label
@@ -114,23 +115,24 @@ def main(folder):
     import visdom
     import time
     viz = visdom.Visdom()
-
-
-
-    db = HustData(folder,224,"train")
-    x,y = next(iter(db))
-    print('sampel:',x.shape,y.shape,y)
-    viz.image(db.denormalize(x),win='sample_x',opts=dict(title='sample_x'))
+    db = HustData(folder,1024,"train")
+    # x,y = next(iter(db))
+    # print(next(iter(db)))
+    # print('sampel:',x.shape,y.shape,y)
+    # viz.image(db.denormalize(x),win='sample_x',opts=dict(title='sample_x'))
     loader = DataLoader(db,batch_size=1,shuffle=True)
     for x,y in loader:
         viz.images(db.denormalize(x),nrow=1,win='batch',opts=dict(title='batch'))
         viz.text(str(y.numpy()),win='label',opts=dict(title='batch-y'))
         time.sleep(10)
 
+
 if __name__ == '__main__':
     # print(os.path)
+    filename = 'HustData'
+    # filename = 'ascall'
     cwd = os.getcwd()
     print(cwd)
-    folder = os.path.join(cwd,'HustData')
+    folder = os.path.join(cwd,filename)
     # folder = 'E:\\debug\\pyCharmdeBug\\image_classification\\HustData'
     main(folder)
