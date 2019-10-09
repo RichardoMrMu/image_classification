@@ -9,21 +9,39 @@
 # @FILE     : train_scratch.PY
 # @Software : PyCharm
 import torch
-import torchvision
+# import torchvision
 from torch import optim,nn
 import visdom
 from torch.utils.data import DataLoader
 from hustdata import HustData
 # from resnet import ResNet18
 import os
-from torchvision.models import resnet18
+from torchvision.models import resnet34
 from utils import Flatten
-import 
-batchsz = 32
-lr = 1e-3
-epochs = 10
+# 超参管理
+import argparse
+#
+parser = argparse.ArgumentParser(description="Image Classification -ResNet18")
+parser.add_argument('--epochs',type=int,default=30,
+                    help='epochs limit (default 10)')
+parser.add_argument('--lr',type=float,default=1e-3,
+                    help='initial learning rate (default :1e-3)')
+parser.add_argument('--seed',type=int,default=1234,
+                    help='random seed (default: 1234)')
+parser.add_argument('--batchsz',type=int,default=32,
+                    help='data batch_size(default=32)')
+parser.add_argument('--num_class',type=int,default=5,
+                    help='number of classification u want to ')
+# parser.add_argument("")
+args = parser.parse_args()
+# batchsz = 32
+# lr = 1e-3
+# epochs = 10
+torch.manual_seed(args.seed)
+# 设置cuda使用的id
+# os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 device = torch.device('cuda')
-torch.manual_seed(1234)
+
 cwd = os.getcwd()
 # print(cwd)
 folder = os.path.join(cwd,'HustData')
@@ -31,9 +49,9 @@ folder = os.path.join(cwd,'HustData')
 train_db = HustData(folder,224,mode='train')
 valid_db = HustData(folder,224,mode='valid')
 test_db = HustData(folder,224,mode='test')
-train_loader = DataLoader(train_db,batch_size=batchsz,shuffle=True)
-valid_loader = DataLoader(valid_db,batch_size=batchsz)
-test_loader = DataLoader(test_db,batch_size=batchsz)
+train_loader = DataLoader(train_db,batch_size=args.batchsz,shuffle=True)
+valid_loader = DataLoader(valid_db,batch_size=args.batchsz)
+test_loader = DataLoader(test_db,batch_size=args.batchsz)
 
 
 viz = visdom.Visdom()
@@ -56,15 +74,15 @@ def evaluate(model,loader):
 def main():
     # 类是5类
     # model = ResNet18(10).to(device)
-    trained_model = resnet18(pretrained=True)
+    trained_model = resnet34(pretrained=True)
     model = nn.Sequential(*list(trained_model.children())[:-1],  # [b,512,1,1]
                           Flatten(),  # [b,512,1,1]=>[b,512]
-                          nn.Linear(512, 10)
+                          nn.Linear(512, args.num_class)
                           ).to(device)
     # x = torch.randn(2,3,224,224)
     # print(model(x).shape)
 
-    optimizer = optim.Adam(model.parameters(),lr=lr)
+    optimizer = optim.Adam(model.parameters(),lr=args.lr)
     criteon = nn.CrossEntropyLoss()
 
     best_acc,best_epoch = 0, 0
@@ -72,7 +90,7 @@ def main():
     global_step = 0
     viz.line([0],[-1],win='loss',opts=dict(title='loss'))
     viz.line([0], [-1], win='val_acc', opts=dict(title='val_acc'))
-    for epoch in range(epochs):
+    for epoch in range(args.epochs):
         for step, (x,y) in enumerate(train_loader):
             # x : [b,3,224,224], y:[b]
             x,y = x.to(device),y.to(device)
@@ -87,7 +105,7 @@ def main():
             viz.line([loss.item()], [global_step], win='loss', update='append')
             global_step += 1
 
-        if epoch % 2 == 0:
+        if epoch % 1 == 0:
             val_acc = evaluate(model,valid_loader)
             if val_acc > best_acc:
                 best_epoch = epoch
@@ -109,5 +127,6 @@ def main():
 
 
 if __name__ == '__main__':
+    # print(torch.cuda.device_count())
     main()
 

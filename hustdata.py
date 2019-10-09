@@ -87,7 +87,7 @@ class HustData(Dataset):
 
 
     def __getitem__(self, idex):
-        # ide [0-len]
+        # idex [0-len]
         # self.images self.labels
         # img :E:\\debug\\pyCharmdeBug\\image_classification\\HustData\\Dinning_Hall\\IMG_20190920_113424.jpg'
         # label : 0
@@ -114,23 +114,24 @@ def main(folder):
     import visdom
     import time
     viz = visdom.Visdom()
-
-
-
-    db = HustData(folder,224,"train")
-    x,y = next(iter(db))
-    print('sampel:',x.shape,y.shape,y)
-    viz.image(db.denormalize(x),win='sample_x',opts=dict(title='sample_x'))
+    db = HustData(folder,1024,"train")
+    # x,y = next(iter(db))
+    # print(next(iter(db)))
+    # print('sampel:',x.shape,y.shape,y)
+    # viz.image(db.denormalize(x),win='sample_x',opts=dict(title='sample_x'))
     loader = DataLoader(db,batch_size=1,shuffle=True)
     for x,y in loader:
         viz.images(db.denormalize(x),nrow=1,win='batch',opts=dict(title='batch'))
         viz.text(str(y.numpy()),win='label',opts=dict(title='batch-y'))
         time.sleep(10)
 
+
 if __name__ == '__main__':
     # print(os.path)
+    filename = 'HustData'
+    # filename = 'ascall'
     cwd = os.getcwd()
     print(cwd)
-    folder = os.path.join(cwd,'HustData')
+    folder = os.path.join(cwd,filename)
     # folder = 'E:\\debug\\pyCharmdeBug\\image_classification\\HustData'
     main(folder)
