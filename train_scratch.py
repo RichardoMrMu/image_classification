@@ -33,13 +33,6 @@ cwd = os.getcwd()
 # print(cwd)
 folder = os.path.join(cwd,'HustData')
 
-train_db = HustData(folder,224,mode='train')
-valid_db = HustData(folder,224,mode='valid')
-test_db = HustData(folder,224,mode='test')
-train_loader = DataLoader(train_db,batch_size=args.batchsz,shuffle=True,
-                          num_workers=4)
-valid_loader = DataLoader(valid_db,batch_size=args.batchsz,num_workers=2)
-test_loader = DataLoader(test_db,batch_size=args.batchsz,num_workers=2)
 
 #viz = visdom.Visdom()
 
@@ -71,12 +64,13 @@ def evaluate(model,loader):
 
     return  correct/total
 def test_img(model):
-    test_img_db = HustData_LOAD(root=folder,resize=224)
+    folder1 = os.path.join(cwd,'folder')
+    test_img_db = HustData_LOAD(root=folder1,resize=224)
     test_img_dataloder = DataLoader(test_img_db,batch_size=args.batchsz,shuffle=False,
                                     num_workers=2)
     for x in test_img_dataloder:
         x = x.to(device)
-        with torch.no_grad:
+        with torch.no_grad():
             logits = model(x)
             pred = logits.argmax(dim=1)
             print(pred)
@@ -84,56 +78,63 @@ def test_img(model):
 
 
 
-def main():
+# def main():
+# train_db = HustData(folder,224,mode='train')
+# valid_db = HustData(folder,224,mode='valid')
+# test_db = HustData(folder,224,mode='test')
+# train_loader = DataLoader(train_db,batch_size=args.batchsz,shuffle=True,
+#                           num_workers=4)
+# valid_loader = DataLoader(valid_db,batch_size=args.batchsz,num_workers=2)
+# test_loader = DataLoader(test_db,batch_size=args.batchsz,num_workers=2)
 
-    model = ResNet18(args.num_class).to(device)
-    optimizer = optim.Adam(model.parameters(),lr=args.lr)
-    criteon = nn.CrossEntropyLoss()
-
-    best_acc,best_epoch = 0, 0
-   
-    #global_step = 0
-    #viz.line([0],[-1],win='loss',opts=dict(title='loss'))
-    #viz.line([0], [-1], win='val_acc', opts=dict(title='val_acc'))
-    for epoch in range(1,args.epochs+1):
-        correct_train = 0
-        for step, (x,y) in enumerate(train_loader):
-            # x : [b,3,224,224], y:[b]
-            x,y = x.to(device),y.to(device)
-
-            logits = model(x)
-            loss = criteon(logits,y)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            #viz.line([loss.item()], [global_step], win='loss', update='append')
-            #global_step += 1
-            # ¼ÆËãacc
-            pred = logits.argmax(dim=1)
-            correct_train += torch.eq(pred,y).sum().float().item()
-        total = len(train_loader.dataset)
-        print("epoch:%d    loss:%f  acc:%f"%(epoch,loss,correct_train/total))
-        print('--'*50)
-        if epoch % 1 == 0:
-            val_acc = evaluate(model,valid_loader)
-            test_acc = evaluate(model,test_loader)
-            print("epoch:%d    val_acc:%f    \n test_acc:%f"%(epoch,val_acc,test_acc))
-            if val_acc > best_acc:
-                best_epoch = epoch
-                best_acc = val_acc
-
-                torch.save(model.state_dict(),'best.mdl')
-                print("model saved!!best_epoch: %d,best_acc:%f   "%(best_epoch,best_acc))
-                print('--'*50)
-                #viz.line([val_acc], [global_step], win='val_acc', update='append')
-    print('best acc:',best_acc,'best_epoch:',best_epoch)
-
-    model.load_state_dict(torch.load('best.mdl'))
-    print('loaded from ckpt!')
-    test_acc = evaluate(model,test_loader)
-    print('test acc:',test_acc)
+#     model = ResNet18(args.num_class).to(device)
+#     optimizer = optim.Adam(model.parameters(),lr=args.lr)
+#     criteon = nn.CrossEntropyLoss()
+#
+#     best_acc,best_epoch = 0, 0
+#
+#     #global_step = 0
+#     #viz.line([0],[-1],win='loss',opts=dict(title='loss'))
+#     #viz.line([0], [-1], win='val_acc', opts=dict(title='val_acc'))
+#     for epoch in range(1,args.epochs+1):
+#         correct_train = 0
+#         for step, (x,y) in enumerate(train_loader):
+#             # x : [b,3,224,224], y:[b]
+#             x,y = x.to(device),y.to(device)
+#
+#             logits = model(x)
+#             loss = criteon(logits,y)
+#
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
+#
+#             #viz.line([loss.item()], [global_step], win='loss', update='append')
+#             #global_step += 1
+#             # Â¼Ã†Ã‹Ã£acc
+#             pred = logits.argmax(dim=1)
+#             correct_train += torch.eq(pred,y).sum().float().item()
+#         total = len(train_loader.dataset)
+#         print("epoch:%d    loss:%f  acc:%f"%(epoch,loss,correct_train/total))
+#         print('--'*50)
+#         if epoch % 1  == 0:
+#             val_acc = evaluate(model,valid_loader)
+#             test_acc = evaluate(model,test_loader)
+#             print("epoch:%d    val_acc:%f    \n test_acc:%f"%(epoch,val_acc,test_acc))
+#             if val_acc > best_acc:
+#                 best_epoch = epoch
+#                 best_acc = val_acc
+#
+#                 torch.save(model.state_dict(),'best.mdl')
+#                 print("model saved!!best_epoch: %d,best_acc:%f   "%(best_epoch,best_acc))
+#                 print('--'*50)
+#                 #viz.line([val_acc], [global_step], win='val_acc', update='append')
+#     print('best acc:',best_acc,'best_epoch:',best_epoch)
+#
+#     model.load_state_dict(torch.load('best.mdl'))
+#     print('loaded from ckpt!')
+#     test_acc = evaluate(model,test_loader)
+#     print('test acc:',test_acc)
 
 
 
@@ -144,6 +145,9 @@ def main():
 if __name__ == '__main__':
     # main()
     model = ResNet18(args.num_class).to(device)
+    optimizer = optim.Adam(model.parameters(),lr=args.lr)
+    criteon = nn.CrossEntropyLoss()
+
     model.load_state_dict(torch.load('best.mdl'))
     print('loaded from ckpt!')
     test_img(model=model)
