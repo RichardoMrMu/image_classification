@@ -143,11 +143,11 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    model = ResNet18(args.num_class).to(device)
-    optimizer = optim.Adam(model.parameters(),lr=args.lr)
-    criteon = nn.CrossEntropyLoss()
+    main()
+    # model = ResNet18(args.num_class).to(device)
+    # optimizer = optim.Adam(model.parameters(),lr=args.lr)
+    # criteon = nn.CrossEntropyLoss()
 
-    model.load_state_dict(torch.load('best.mdl'))
-    print('loaded from ckpt!')
-    test_img(model=model)
+    # model.load_state_dict(torch.load('best.mdl'))
+    # print('loaded from ckpt!')
+    # test_img(model=model)

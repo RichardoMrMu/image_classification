@@ -41,6 +41,12 @@ class HustData(Dataset):
 
 
     def load_csv(self,filename):
+        name2label_file = 'name2label.csv'
+        if not os.path.exists(os.path.join(self.root, name2label_file)):
+            with open(os.path.join(self.root,name2label_file),mode='w',newline='') as f:
+                writer = csv.writer(f)
+                for name_,label_ in enumerate(self.name2label):
+                    writer.writerow([name_,label_])
         if not os.path.exists(os.path.join(self.root,filename)):
             images = []
             for name in self.name2label.keys():
