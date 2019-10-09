@@ -13,7 +13,7 @@ from resnet import ResNet18
 import os
 import argparse
 from torchvision import transforms
-#
+# 图片分类
 parser = argparse.ArgumentParser(description="Image Classification -ResNet18")
 parser.add_argument('--epochs',type=int,default=10,
                     help='epochs limit (default 10)')
